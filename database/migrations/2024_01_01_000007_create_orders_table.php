@@ -22,10 +22,10 @@ return new class extends Migration
             $table->decimal('discount', 10, 2)->default(0);
             $table->decimal('total', 10, 2);
             $table->string('currency', 3)->default('USD');
-            $table->text('shipping_address');
+            $table->text('shipping_address')->nullable();
             $table->text('billing_address')->nullable();
-            $table->string('customer_email');
-            $table->string('customer_phone');
+            $table->string('customer_email')->nullable();
+            $table->string('customer_phone')->nullable();
             $table->text('notes')->nullable();
             $table->timestamp('confirmed_at')->nullable();
             $table->timestamp('shipped_at')->nullable();

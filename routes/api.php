@@ -1,48 +1,36 @@
 <?php
 
-use App\Http\Controllers\Api\AuthController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\ProductController;
+use App\Http\Controllers\Api\V1\OrderController;
+use App\Http\Controllers\Api\V1\InventoryController;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-*/
+// Public routes with strict rate limiting
+Route::prefix('v1')->middleware(['throttle:auth'])->group(function () {
+    Route::post('register', [AuthController::class, 'register']);
+    Route::post('login', [AuthController::class, 'login']);
+    Route::post('refresh', [AuthController::class, 'refresh']);
+    Route::post('logout', [AuthController::class, 'logout']);
+});
 
-// Public routes
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+// Protected routes with standard rate limiting
+Route::prefix('v1')->middleware(['jwt.auth', 'throttle:api'])->group(function () {
+    // Auth
+    Route::get('me', [AuthController::class, 'me']);
 
-// Protected routes
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/me', [AuthController::class, 'me']);
+    // Products
+    Route::apiResource('products', ProductController::class);
 
-    // Admin only routes
-    Route::middleware('role:admin')->prefix('admin')->group(function () {
-        Route::get('/dashboard', function () {
-            return response()->json(['message' => 'Admin dashboard']);
-        });
-    });
+    // Orders
+    Route::get('orders', [OrderController::class, 'index']);
+    Route::get('orders/{order}', [OrderController::class, 'show']);
+    Route::post('orders', [OrderController::class, 'store'])->middleware('throttle:orders');
+    Route::post('orders/{id}/confirm', [OrderController::class, 'confirm'])->middleware('role:admin,vendor');
+    Route::post('orders/{id}/cancel', [OrderController::class, 'cancel']);
+    Route::patch('orders/{id}/status', [OrderController::class, 'updateStatus'])->middleware('role:admin,vendor');
 
-    // Vendor only routes
-    Route::middleware('role:vendor')->prefix('vendor')->group(function () {
-        Route::get('/dashboard', function () {
-            return response()->json(['message' => 'Vendor dashboard']);
-        });
-    });
-
-    // User routes (accessible by all authenticated users)
-    Route::prefix('user')->group(function () {
-        Route::get('/dashboard', function () {
-            return response()->json(['message' => 'User dashboard']);
-        });
-    });
-
-    // Routes accessible by multiple roles
-    Route::middleware('role:admin,vendor')->prefix('management')->group(function () {
-        Route::get('/stats', function () {
-            return response()->json(['message' => 'Management stats']);
-        });
-    });
+    // Inventory
+    Route::post('inventory/add', [InventoryController::class, 'addStock'])->middleware('role:admin,vendor');
+    Route::post('inventory/deduct', [InventoryController::class, 'deductStock'])->middleware('role:admin,vendor');
 });

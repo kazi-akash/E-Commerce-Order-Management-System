@@ -13,10 +13,9 @@ return new class extends Migration
     {
         Schema::create('inventories', function (Blueprint $table) {
             $table->id();
-            $table->morphs('inventoriable'); // product_id or product_variant_id (already creates index)
-            $table->integer('quantity')->default(0);
-            $table->integer('reserved_quantity')->default(0); // For pending orders
-            $table->integer('available_quantity')->storedAs('quantity - reserved_quantity');
+            $table->morphs('inventoriable');
+            $table->integer('available_quantity')->default(0);
+            $table->integer('reserved_quantity')->default(0);
             $table->timestamp('last_restocked_at')->nullable();
             $table->timestamps();
         });

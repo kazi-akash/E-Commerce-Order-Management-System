@@ -51,8 +51,10 @@ class OrderItem extends Model
     // Helper methods
     public function getInventoriable()
     {
-        return $this->product_variant_id
-            ? $this->productVariant
-            : $this->product;
+        if ($this->product_variant_id) {
+            return $this->productVariant()->first() ?? ProductVariant::find($this->product_variant_id);
+        }
+
+        return $this->product()->first() ?? Product::find($this->product_id);
     }
 }

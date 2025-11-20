@@ -5,11 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Laravel\Scout\Searchable;
 
 class Product extends Model
 {
-    use HasFactory, SoftDeletes, Searchable;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'vendor_id',
@@ -82,17 +81,6 @@ class Product extends Model
         return $query->whereHas('inventory', function ($q) {
             $q->whereRaw('available_quantity <= products.low_stock_threshold');
         });
-    }
-
-    // Scout searchable
-    public function toSearchableArray()
-    {
-        return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'description' => $this->description,
-            'sku' => $this->sku,
-        ];
     }
 
     // Helper methods
